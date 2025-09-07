@@ -16,27 +16,30 @@ namespace Eagle_Monitor_RAT_Reborn.Builder
     internal class Obfuscate
     {
         #region "BiFang"
+        private static readonly Dictionary<string, string> _namesMethods = new Dictionary<string, string>();
         private static void ObfuscateMethods(ModuleDef md)
         {
             foreach (var type in md.GetTypes())
             {
-                // create method to obfuscation map
                 foreach (MethodDef method in type.Methods)
                 {
-                    // empty method check
                     if (!method.HasBody) continue;
-                    // method is a constructor
                     if (method.IsConstructor) continue;
-                    // method overrides another
                     if (method.HasOverrides) continue;
-                    // method has a rtspecialname, VES needs proper name
                     if (method.IsRuntimeSpecialName) continue;
-                    // method foward declaration
                     if (method.DeclaringType.IsForwarder) continue;
-                    Random random = new Random();
-                    string encName = Misc.RandomString.RandomStringFunction(random.Next(5, 11));
-                   // Console.WriteLine($"{method.Name} -> {encName}");
-                    method.Name = encName;
+
+                    string newName;
+                    if (_namesMethods.TryGetValue(method.Name, out newName))
+                    {
+                        method.Name = newName;
+                    }
+                    else
+                    {
+                        newName = Misc.RandomString.GenerateRandomString();
+                        _namesMethods.Add(method.Name, newName);
+                        method.Name = newName;
+                    }
                 }
             }
         }
